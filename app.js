@@ -18,6 +18,7 @@ let shapes = [];
 let selectedShapeId = null;
 let interaction = null;
 let nextShapeId = 1;
+let transientStatusMessage = '';
 
 const defaultShapeColors = {
   rectangle: '#ffffff',
@@ -47,6 +48,7 @@ function createShape(type) {
 
   shapes.push(shape);
   selectShape(shape.id);
+  stage.focus();
   render();
 }
 
@@ -107,13 +109,24 @@ function describeShape(shape) {
 
 function updateStatus() {
   const shape = getSelectedShape();
-  statusElement.textContent = describeShape(shape);
+  const baseMessage = describeShape(shape);
+  statusElement.textContent = transientStatusMessage ? `${baseMessage} ${transientStatusMessage}` : baseMessage;
   deleteButton.disabled = !shape;
   shapeColorInput.disabled = !shape;
   shapeColorInput.value = shape ? shape.color : '#ffffff';
 }
 
+function clearTransientStatus() {
+  transientStatusMessage = '';
+}
+
+function setTransientStatus(message) {
+  transientStatusMessage = message;
+  updateStatus();
+}
+
 function selectShape(id) {
+  clearTransientStatus();
   selectedShapeId = id;
   updateStatus();
   render();
@@ -203,6 +216,7 @@ function deleteSelectedShape() {
     return;
   }
 
+  clearTransientStatus();
   shapes = shapes.filter((shape) => shape.id !== selectedShapeId);
   selectedShapeId = null;
   updateStatus();
@@ -210,6 +224,7 @@ function deleteSelectedShape() {
 }
 
 function clearCanvas() {
+  clearTransientStatus();
   shapes = [];
   selectedShapeId = null;
   updateStatus();
@@ -349,6 +364,7 @@ stage.addEventListener('pointerdown', (event) => {
     }
 
     startResizing(activeShape, handle, pointer);
+    stage.focus();
     stage.setPointerCapture(event.pointerId);
     return;
   }
@@ -366,12 +382,15 @@ stage.addEventListener('pointerdown', (event) => {
     }
 
     startDragging(activeShape, pointer);
+    stage.focus();
     stage.setPointerCapture(event.pointerId);
     return;
   }
 
+  clearTransientStatus();
   selectedShapeId = null;
   interaction = null;
+  stage.focus();
   updateStatus();
   render();
 });
@@ -387,6 +406,7 @@ shapeColorInput.addEventListener('input', (event) => {
   }
 
   shape.color = event.target.value;
+  clearTransientStatus();
   render();
 });
 
@@ -409,7 +429,7 @@ fullscreenButton.addEventListener('click', async () => {
       await document.documentElement.requestFullscreen();
     }
   } catch (error) {
-    statusElement.textContent = `Fullscreen unavailable: ${error.message}`;
+    setTransientStatus(`Fullscreen unavailable: ${error.message}`);
   }
 });
 
@@ -420,7 +440,7 @@ document.addEventListener('fullscreenchange', () => {
   stage.focus();
 });
 
-document.addEventListener('keydown', (event) => {
+stage.addEventListener('keydown', (event) => {
   const activeElement = document.activeElement;
   if (
     activeElement &&
@@ -492,6 +512,7 @@ document.addEventListener('keydown', (event) => {
 
   if (handled) {
     event.preventDefault();
+    clearTransientStatus();
     updateStatus();
     render();
   }
