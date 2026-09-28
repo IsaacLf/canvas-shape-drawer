@@ -324,6 +324,14 @@ function endInteraction() {
   interaction = null;
 }
 
+function endPointerInteraction(event) {
+  if (event && stage.hasPointerCapture(event.pointerId)) {
+    stage.releasePointerCapture(event.pointerId);
+  }
+
+  endInteraction();
+}
+
 stage.addEventListener('pointerdown', (event) => {
   const handle = event.target.dataset.handle;
   const shapeId = event.target.dataset.shapeId;
@@ -363,13 +371,14 @@ stage.addEventListener('pointerdown', (event) => {
   }
 
   selectedShapeId = null;
+  interaction = null;
   updateStatus();
   render();
 });
 
 stage.addEventListener('pointermove', updateInteraction);
-stage.addEventListener('pointerup', endInteraction);
-stage.addEventListener('pointercancel', endInteraction);
+stage.addEventListener('pointerup', endPointerInteraction);
+stage.addEventListener('pointercancel', endPointerInteraction);
 
 shapeColorInput.addEventListener('input', (event) => {
   const shape = getSelectedShape();
@@ -396,10 +405,8 @@ fullscreenButton.addEventListener('click', async () => {
   try {
     if (document.fullscreenElement) {
       await document.exitFullscreen();
-      stage.focus();
     } else {
       await document.documentElement.requestFullscreen();
-      stage.focus();
     }
   } catch (error) {
     statusElement.textContent = `Fullscreen unavailable: ${error.message}`;
@@ -410,6 +417,7 @@ document.addEventListener('fullscreenchange', () => {
   const isFullscreen = Boolean(document.fullscreenElement);
   fullscreenButton.textContent = isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen';
   fullscreenButton.setAttribute('aria-pressed', String(isFullscreen));
+  stage.focus();
 });
 
 document.addEventListener('keydown', (event) => {
@@ -434,25 +442,45 @@ document.addEventListener('keydown', (event) => {
     deleteSelectedShape();
   } else if (event.key === 'ArrowLeft') {
     if (event.shiftKey) {
-      setShapeBounds(shape, { x: shape.x, y: shape.y, width: shape.width - sizeStep, height: shape.height - (shape.type === 'circle' ? sizeStep : 0) });
+      setShapeBounds(shape, {
+        x: shape.x,
+        y: shape.y,
+        width: shape.width - sizeStep,
+        height: shape.height - (shape.type === 'circle' ? sizeStep : 0),
+      });
     } else {
       setShapeBounds(shape, { x: shape.x - moveStep, y: shape.y, width: shape.width, height: shape.height });
     }
   } else if (event.key === 'ArrowRight') {
     if (event.shiftKey) {
-      setShapeBounds(shape, { x: shape.x, y: shape.y, width: shape.width + sizeStep, height: shape.height + (shape.type === 'circle' ? sizeStep : 0) });
+      setShapeBounds(shape, {
+        x: shape.x,
+        y: shape.y,
+        width: shape.width + sizeStep,
+        height: shape.height + (shape.type === 'circle' ? sizeStep : 0),
+      });
     } else {
       setShapeBounds(shape, { x: shape.x + moveStep, y: shape.y, width: shape.width, height: shape.height });
     }
   } else if (event.key === 'ArrowUp') {
     if (event.shiftKey) {
-      setShapeBounds(shape, { x: shape.x, y: shape.y, width: shape.width, height: shape.height - sizeStep });
+      setShapeBounds(shape, {
+        x: shape.x,
+        y: shape.y,
+        width: shape.width - (shape.type === 'circle' ? sizeStep : 0),
+        height: shape.height - sizeStep,
+      });
     } else {
       setShapeBounds(shape, { x: shape.x, y: shape.y - moveStep, width: shape.width, height: shape.height });
     }
   } else if (event.key === 'ArrowDown') {
     if (event.shiftKey) {
-      setShapeBounds(shape, { x: shape.x, y: shape.y, width: shape.width, height: shape.height + sizeStep });
+      setShapeBounds(shape, {
+        x: shape.x,
+        y: shape.y,
+        width: shape.width + (shape.type === 'circle' ? sizeStep : 0),
+        height: shape.height + sizeStep,
+      });
     } else {
       setShapeBounds(shape, { x: shape.x, y: shape.y + moveStep, width: shape.width, height: shape.height });
     }
