@@ -79,10 +79,18 @@ function setShapeBounds(shape, bounds) {
 }
 
 function getPointerPosition(event) {
+  const ctm = stage.getScreenCTM();
+  if (!ctm) {
+    return {
+      x: 0,
+      y: 0,
+    };
+  }
+
   const point = stage.createSVGPoint();
   point.x = event.clientX;
   point.y = event.clientY;
-  const transformed = point.matrixTransform(stage.getScreenCTM().inverse());
+  const transformed = point.matrixTransform(ctm.inverse());
   return {
     x: clamp(transformed.x, 0, stageBounds.width),
     y: clamp(transformed.y, 0, stageBounds.height),
@@ -322,26 +330,34 @@ stage.addEventListener('pointerdown', (event) => {
   const pointer = getPointerPosition(event);
 
   if (handle && shapeId) {
-    const shape = shapes.find((item) => item.id === shapeId);
-    if (!shape) {
+    if (!shapes.some((item) => item.id === shapeId)) {
       return;
     }
 
-    selectShape(shape.id);
-    startResizing(shape, handle, pointer);
+    selectShape(shapeId);
+    const activeShape = shapes.find((item) => item.id === shapeId);
+    if (!activeShape) {
+      return;
+    }
+
+    startResizing(activeShape, handle, pointer);
     stage.setPointerCapture(event.pointerId);
     return;
   }
 
   if (shapeId) {
-    const shape = shapes.find((item) => item.id === shapeId);
-    if (!shape) {
+    if (!shapes.some((item) => item.id === shapeId)) {
       return;
     }
 
     bringToFront(shapeId);
     selectShape(shapeId);
-    startDragging(shape, pointer);
+    const activeShape = shapes.find((item) => item.id === shapeId);
+    if (!activeShape) {
+      return;
+    }
+
+    startDragging(activeShape, pointer);
     stage.setPointerCapture(event.pointerId);
     return;
   }
@@ -398,7 +414,10 @@ document.addEventListener('fullscreenchange', () => {
 
 document.addEventListener('keydown', (event) => {
   const activeElement = document.activeElement;
-  if (activeElement && ['INPUT', 'BUTTON'].includes(activeElement.tagName)) {
+  if (
+    activeElement &&
+    (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElement.tagName) || activeElement.isContentEditable)
+  ) {
     return;
   }
 
