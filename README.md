@@ -6,11 +6,11 @@ A lightweight browser app for ambient-light testing with movable, resizable, rec
 
 No build step or dependencies are required.
 
-- Open `/home/runner/work/canvas-shape-drawer/canvas-shape-drawer/index.html` directly in a browser, or
+- Open `index.html` directly in a browser from the project root, or
 - Serve the repository with a simple static server, for example:
 
 ```bash
-cd /home/runner/work/canvas-shape-drawer/canvas-shape-drawer
+cd canvas-shape-drawer
 python3 -m http.server 8000
 ```
 

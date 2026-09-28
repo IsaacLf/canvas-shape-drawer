@@ -237,7 +237,7 @@ function startResizing(shape, handle, pointer) {
   };
 }
 
-function resizeFromHandle(startBounds, handle, pointer) {
+function resizeFromHandle(shape, startBounds, handle, pointer) {
   if (handle.length !== 2) {
     return { ...startBounds };
   }
@@ -246,7 +246,7 @@ function resizeFromHandle(startBounds, handle, pointer) {
     return { ...startBounds };
   }
 
-  if (getSelectedShape()?.type === 'circle') {
+  if (shape.type === 'circle') {
     const anchorX = handle.includes('w') ? startBounds.x + startBounds.width : startBounds.x;
     const anchorY = handle.includes('n') ? startBounds.y + startBounds.height : startBounds.y;
     const deltaX = Math.abs(pointer.x - anchorX);
@@ -304,7 +304,7 @@ function updateInteraction(event) {
       height: shape.height,
     });
   } else if (interaction.type === 'resize') {
-    const resized = resizeFromHandle(interaction.startBounds, interaction.handle, pointer);
+    const resized = resizeFromHandle(shape, interaction.startBounds, interaction.handle, pointer);
     setShapeBounds(shape, resized);
   }
 
@@ -380,6 +380,7 @@ fullscreenButton.addEventListener('click', async () => {
   try {
     if (document.fullscreenElement) {
       await document.exitFullscreen();
+      stage.focus();
     } else {
       await document.documentElement.requestFullscreen();
       stage.focus();
