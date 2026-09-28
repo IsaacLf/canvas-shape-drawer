@@ -66,8 +66,6 @@ function getShapeBounds(shape) {
 }
 
 function setShapeBounds(shape, bounds) {
-  shape.x = clamp(bounds.x, 0, stageBounds.width - bounds.width);
-  shape.y = clamp(bounds.y, 0, stageBounds.height - bounds.height);
   shape.width = clamp(bounds.width, minimumSize, stageBounds.width);
   shape.height = clamp(bounds.height, minimumSize, stageBounds.height);
 
@@ -75,9 +73,10 @@ function setShapeBounds(shape, bounds) {
     const size = clamp(Math.max(shape.width, shape.height), minimumSize, Math.min(stageBounds.width, stageBounds.height));
     shape.width = size;
     shape.height = size;
-    shape.x = clamp(shape.x, 0, stageBounds.width - size);
-    shape.y = clamp(shape.y, 0, stageBounds.height - size);
   }
+
+  shape.x = clamp(bounds.x, 0, stageBounds.width - shape.width);
+  shape.y = clamp(bounds.y, 0, stageBounds.height - shape.height);
 }
 
 function getPointerPosition(event) {
@@ -440,7 +439,7 @@ document.addEventListener('fullscreenchange', () => {
   stage.focus();
 });
 
-stage.addEventListener('keydown', (event) => {
+document.addEventListener('keydown', (event) => {
   const activeElement = document.activeElement;
   if (
     activeElement &&
